@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- ArduSub ROS控制系统 Launch文件 -->
+  
+  <!-- 参数配置 -->
+  <arg name="use_gui" default="true" doc="是否启动GUI控制界面"/>
+  <arg name="use_keyboard" default="false" doc="是否启动键盘控制"/>
+  <arg name="udp_compat" default="true" doc="是否启用UDP兼容模式"/>
+  
+  <!-- ArduSub ROS桥接节点 -->
+  <node name="ardusub_ros_bridge" pkg="ardusub_control" type="ardusub_ros_bridge.py" output="screen">
+    <param name="udp_compat" value="$(arg udp_compat)"/>
+  </node>
+  
+  <!-- GUI控制界面 (可选) -->
+  <node if="$(arg use_gui)" name="ardusub_gui" pkg="ardusub_control" type="ardusub_gui_controller.py" output="screen"/>
+  
+  <!-- 键盘控制节点 (可选) -->
+  <node if="$(arg use_keyboard)" name="ardusub_keyboard" pkg="ardusub_control" type="ardusub_keyboard_ros.py" output="screen"/>
+  
+  <!-- 状态监控和诊断 -->
+  <node name="ardusub_monitor" pkg="rostopic" type="rostopic" args="echo /ardusub/imu" output="log"/>
+  
+</launch>
