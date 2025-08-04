@@ -68,7 +68,7 @@ class UDPProxy(object):
             data, client_address = self.sock.recvfrom(1024)
             #print("[From {}]: {}".format(client_address, data))
             data = data.decode('latin1')  
-            self.data_parse(data)
+            self.data_prase(data)
 
 
     # z:-500 ~ 1500 中间值为500  PWM的范围是 5.5%-9.5%
@@ -76,7 +76,7 @@ class UDPProxy(object):
     # x: -2000 ~ 2000 中间值为0
     # r: -2000 ~ 2000 中间值为0
 
-    def data_parse(self, data):
+    def data_prase(self, data):
 
         if(ord(data[4]) == 0x0b and ord(data[5])==0xfb):
             print("使能控制")

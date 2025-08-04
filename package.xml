@@ -2,43 +2,41 @@
 <package format="2">
   <name>ardusub_control</name>
   <version>1.0.0</version>
-  <description>ArduSub控制系统 - 支持ROS话题控制、GUI界面和键盘控制的水下机器人控制包</description>
+  <description>ROS package for ArduSub control using MAVLink</description>
 
-  <!-- 维护者信息 -->
-  <maintainer email="user@example.com">ArduSub Control Team</maintainer>
+  <maintainer email="your.email@example.com">Your Name</maintainer>
 
-  <!-- 许可证 -->
   <license>MIT</license>
 
-  <!-- 构建工具依赖 -->
   <buildtool_depend>catkin</buildtool_depend>
 
-  <!-- 构建依赖 -->
+  <!-- ROS dependencies -->
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
+  <build_depend>mavros_msgs</build_depend>
+  <build_depend>tf</build_depend>
   <build_depend>message_generation</build_depend>
 
-  <!-- 构建导出依赖 -->
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
   <build_export_depend>geometry_msgs</build_export_depend>
   <build_export_depend>sensor_msgs</build_export_depend>
+  <build_export_depend>mavros_msgs</build_export_depend>
+  <build_export_depend>tf</build_export_depend>
 
-  <!-- 执行依赖 -->
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>mavros_msgs</exec_depend>
+  <exec_depend>tf</exec_depend>
   <exec_depend>message_runtime</exec_depend>
 
-  <!-- Python依赖包说明 -->
-  <!-- 这些需要通过pip安装: -->
-  <!-- pip install pymavlink pynput -->
+  <!-- Python dependencies -->
+  <exec_depend>python3-pymavlink</exec_depend>
 
-  <!-- 导出信息 -->
   <export>
-    <!-- 其他工具可以请求此包的额外信息 -->
   </export>
 </package>

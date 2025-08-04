@@ -1,248 +1,210 @@
-# Robot_controller （ArduSub控制系统）
+# ArduSub ROS Control Package
 
-这是一个基于ROS的ArduSub水下机器人控制系统的重构版本，采用模块化设计，支持多种控制方式，无需sudo权限，更加安全可靠。
+这个ROS包提供了与ArduSub飞控进行通信和控制的完整解决方案，基于MAVLink协议。
 
-## 🏗️ 项目结构
+## 功能特性
 
-```
-ardusub_control/                    # ROS包根目录
-├── package.xml                     # ROS包配置文件
-├── CMakeLists.txt                  # CMake构建文件
-├── requirements.txt                # Python依赖
-├── install.sh                      # 安装脚本
-├── README.md                       # 项目说明
-│
-├── src/ardusub_control/           # 核心库模块
-│   ├── __init__.py                # 包初始化
-│   ├── control_ardusub.py         # ArduSub底层控制库
-│   ├── udp_connect.py             # UDP通信核心类
-│   └── config_manager.py          # 配置管理器
-│
-├── scripts/                       # ROS可执行脚本
-│   ├── ardusub_ros_bridge.py      # ROS桥接节点 (主推荐)
-│   ├── ardusub_keyboard_ros.py    # 键盘控制节点
-│   ├── ardusub_gui_controller.py  # GUI控制界面
-│   └── ardusub_demo.py            # 演示程序
-│
-├── tools/                         # 工具脚本
-│   ├── keyboard_controller.py     # 原版键盘控制器
-│   ├── status_receiver.py         # UDP状态接收器
-│   └── connect_main.py            # UDP主程序入口
-│
-├── config/                        # 配置文件
-│   ├── ardusub_config.yaml        # 系统配置
-│   └── start_ardusub.sh           # 启动脚本 (重构版)
-│
-├── launch/                        # ROS启动文件
-│   └── ardusub_control.launch     # 系统启动配置
-│
-└── msg/                           # ROS消息定义
-    ├── ArduSubStatus.msg          # 状态消息
-    └── ArduSubCommand.msg         # 控制命令消息
-```
+- **实时数据通信**: 接收飞控的姿态、深度、温度等传感器数据
+- **多种控制模式**: 支持手动控制、速度控制、深度控制、姿态控制
+- **设备控制**: 支持灯光、机械手、相机云台等设备控制
+- **ROS标准接口**: 使用标准ROS消息类型，便于集成其他ROS包
+- **无需sudo权限**: 不依赖键盘输入，适合在服务器环境运行
 
-## 系统架构
+## 系统要求
 
-```
-ROS话题系统 ←→ ArduSub ROS桥接 ←→ MAVLink ←→ ArduSub飞控 ←→ 水下机器人
-     ↑
-GUI控制界面 / 键盘控制 / 其他ROS节点
-```
+- Ubuntu 18.04/20.04 + ROS Melodic/Noetic
+- Python 3.x
+- PyMAVLink库
+- 网络连接到ArduSub飞控 (UDP端口14551)
 
-## 文件说明
+## 安装依赖
 
-### 核心文件
-- `connect_main.py` - 原始UDP主程序入口
-- `udp_connect.py` - UDP通信核心类 (已修复拼写错误)
-- `control_ardusub.py` - ArduSub底层控制库
-
-### ROS相关文件
-- `ardusub_ros_bridge.py` - **ROS桥接节点** (主推荐)
-- `ardusub_keyboard_ros.py` - 基于pynput的键盘控制节点
-- `ardusub_gui_controller.py` - **GUI控制界面** (无需sudo)
-- `msg/ArduSubStatus.msg` - 状态消息定义
-- `msg/ArduSubCommand.msg` - 控制命令定义
-
-### 工具脚本
-- `status_receiver.py` - UDP状态接收器
-- `start_ardusub.sh` - 启动脚本
-- `README.md` - 本说明文档
-
-## 🚀 快速开始
-
-### 方式1: 自动安装 (推荐)
 ```bash
-# 运行安装脚本
-./install.sh
+# 安装ROS依赖
+sudo apt install ros-$ROS_DISTRO-mavros ros-$ROS_DISTRO-mavros-extras
 
-# 启动系统
-./config/start_ardusub.sh
+# 安装Python依赖
+pip3 install pymavlink
+
+# 如果需要MAVROS完整功能
+sudo /opt/ros/$ROS_DISTRO/lib/mavros/install_geographiclib_datasets.sh
 ```
 
-### 方式2: 使用启动脚本
-```bash
-# 进入包目录
-cd /path/to/catkin_ws/src/ardusub_control
+## 文件结构
 
-# 运行启动脚本 (交互式菜单)
-./config/start_ardusub.sh
-
-# 或者直接指定启动模式
-./config/start_ardusub.sh gui          # GUI控制器
-./config/start_ardusub.sh ros          # 完整ROS系统
-./config/start_ardusub.sh bridge       # ROS桥接节点
+```
+ardusub_control/
+├── ardusub_ros_node.py         # 主ROS节点
+├── ardusub_controller.py       # 控制客户端示例
+├── control_ardusub.py          # MAVLink控制模块 (原有)
+├── udp_connect.py             # UDP代理模块 (原有)
+├── connect_main.py            # 原始主程序 (原有)
+├── launch/
+│   └── ardusub_control.launch # 启动文件
+├── msg/
+│   └── ArdusubStatus.msg      # 自定义消息类型
+├── package.xml                # ROS包配置
+├── CMakeLists.txt            # 构建配置
+└── README.md                 # 本文件
 ```
 
-### 方式3: 直接启动GUI控制 (最简单)
+## 编译和安装
+
 ```bash
-cd scripts
-python3 ardusub_gui_controller.py
+# 将包放到ROS工作空间
+cd ~/catkin_ws/src
+git clone <your-repo> ardusub_control
+
+# 编译
+cd ~/catkin_ws
+catkin_make
+
+# 加载环境
+source devel/setup.bash
 ```
 
-### 方式4: ROS模式
+## 使用方法
+
+### 1. 启动主节点
+
 ```bash
-# 终端1: 启动完整ROS系统
+# 方法1: 使用launch文件启动
 roslaunch ardusub_control ardusub_control.launch
 
-# 或者分步启动:
-# 终端1: 启动ROS桥接
-cd scripts && python3 ardusub_ros_bridge.py
-
-# 终端2: 启动键盘控制 (可选)
-cd scripts && python3 ardusub_keyboard_ros.py
+# 方法2: 直接启动节点
+rosrun ardusub_control ardusub_ros_node.py
 ```
 
-## 🎮 控制方式
+### 2. 使用控制客户端
 
-### 1. GUI控制界面 (推荐)
-- **优点**: 直观易用，无需sudo权限，支持鼠标和键盘
-- **特点**: 实时状态显示，按钮控制，键盘快捷键
-- **启动**: `python3 ardusub_gui_controller.py`
-
-### 2. ROS话题控制
-- **优点**: 标准ROS接口，易于集成其他ROS节点
-- **话题列表**:
-  - `/ardusub/cmd_vel` (geometry_msgs/Twist) - 运动控制
-  - `/ardusub/set_mode` (std_msgs/String) - 模式切换
-  - `/ardusub/arm` (std_msgs/Bool) - 解锁控制
-  - `/ardusub/device_cmd` (std_msgs/String) - 设备控制
-
-### 3. 键盘控制 (pynput)
-- **优点**: 无需sudo权限，基于pynput库
-- **启动**: `python3 ardusub_keyboard_ros.py`
-
-## 🎯 控制说明
-
-### 运动控制
-- **W/S**: 前进/后退
-- **A/D**: 左平移/右平移
-- **Q/E**: 上浮/下潜
-- **J/L**: 左转/右转
-- **I/K**: 抬头/低头
-- **U/O**: 左倾/右倾
-
-### 模式切换
-- **1**: 手动模式
-- **2**: 自稳模式
-- **3**: 定深模式
-
-### 设备控制
-- **F**: 机械手合
-- **G**: 机械手张
-- **T**: 主灯开关
-- **Y**: 光圈灯开关
-
-### 系统控制
-- **Space**: 解锁/锁定电机
-- **H**: 发送心跳包
-- **ESC**: 退出程序
-
-## 📊 状态反馈
-
-系统实时反馈以下数据：
-- **姿态信息**: 俯仰角、横滚角、偏航角
-- **位置信息**: 深度
-- **环境数据**: 水温
-- **系统状态**: 电机解锁状态、飞行模式
-
-## 🔧 ROS话题接口
-
-### 发布的话题
 ```bash
-/ardusub/imu           # sensor_msgs/Imu - IMU数据
-/ardusub/depth         # std_msgs/Float64 - 深度信息
-/ardusub/temperature   # std_msgs/Float64 - 温度数据
-/ardusub/armed         # std_msgs/Bool - 解锁状态
-/ardusub/flight_mode   # std_msgs/String - 飞行模式
+# 启动交互式控制客户端
+rosrun ardusub_control ardusub_controller.py
 ```
 
-### 订阅的话题
+### 3. 使用ROS话题控制
+
 ```bash
-/ardusub/cmd_vel       # geometry_msgs/Twist - 运动控制
-/ardusub/set_mode      # std_msgs/String - 模式设置
-/ardusub/arm           # std_msgs/Bool - 解锁控制
-/ardusub/device_cmd    # std_msgs/String - 设备控制
+# 武装载具
+rostopic pub /ardusub/cmd_arm std_msgs/Bool "data: true"
+
+# 发送速度指令 (前进1m/s)
+rostopic pub /ardusub/cmd_vel geometry_msgs/Twist "
+linear:
+  x: 1.0
+  y: 0.0
+  z: 0.0
+angular:
+  x: 0.0
+  y: 0.0
+  z: 0.0"
+
+# 设置目标深度
+rostopic pub /ardusub/cmd_depth std_msgs/Float64 "data: 5.0"
+
+# 切换到定深模式
+rostopic pub /ardusub/cmd_mode std_msgs/Int32 "data: 2"
+
+# 开启灯光
+rostopic pub /ardusub/cmd_light std_msgs/Bool "data: true"
 ```
 
-## 📦 依赖安装
+### 4. 查看状态数据
 
-### 自动安装 (推荐)
 ```bash
-./install.sh
+# 查看姿态数据
+rostopic echo /ardusub/attitude
+
+# 查看深度数据  
+rostopic echo /ardusub/depth
+
+# 查看温度数据
+rostopic echo /ardusub/temperature
+
+# 查看武装状态
+rostopic echo /ardusub/armed
 ```
 
-### 手动安装
-```bash
-# Python依赖
-pip3 install -r requirements.txt
-# 或者
-pip3 install pymavlink pynput PyYAML numpy
+## ROS话题接口
 
-# 系统依赖 (Ubuntu/Debian)
-sudo apt-get install python3-tk
+### 发布的话题 (状态数据)
 
-# ROS依赖 (如果使用ROS模式)
-source /opt/ros/noetic/setup.bash  # 或对应ROS版本
-catkin_make  # 在工作空间根目录运行
-```
+| 话题名称 | 消息类型 | 描述 |
+|---------|---------|-----|
+| `/ardusub/attitude` | `geometry_msgs/Vector3` | 姿态角度 (roll, pitch, yaw) |
+| `/ardusub/depth` | `std_msgs/Float64` | 当前深度 |
+| `/ardusub/temperature` | `sensor_msgs/Temperature` | 水温 |
+| `/ardusub/armed` | `std_msgs/Bool` | 武装状态 |
+| `/ardusub/mode` | `std_msgs/Int32` | 飞行模式 |
 
-## 🛡️ 安全特性
+### 订阅的话题 (控制指令)
 
-1. **无需sudo权限**: 使用pynput和tkinter，避免安全风险
-2. **标准ROS接口**: 符合机器人开发规范
-3. **多重保护**: 心跳检测、状态监控、错误处理
-4. **兼容性好**: 保持与原UDP协议的兼容性
+| 话题名称 | 消息类型 | 描述 |
+|---------|---------|-----|
+| `/ardusub/cmd_vel` | `geometry_msgs/Twist` | 速度控制指令 |
+| `/ardusub/cmd_depth` | `std_msgs/Float64` | 深度控制指令 |
+| `/ardusub/cmd_attitude` | `geometry_msgs/Vector3` | 姿态控制指令 |
+| `/ardusub/cmd_arm` | `std_msgs/Bool` | 武装/解除武装 |
+| `/ardusub/cmd_mode` | `std_msgs/Int32` | 模式切换 |
+| `/ardusub/cmd_light` | `std_msgs/Bool` | 灯光控制 |
+| `/ardusub/cmd_camera_tilt` | `std_msgs/Float64` | 相机云台控制 |
+| `/ardusub/cmd_servo` | `geometry_msgs/Vector3` | 舵机控制 |
 
-## 🔍 故障排除
+## 控制模式说明
 
-### GUI无法启动
-- 检查是否安装了tkinter: `python3 -m tkinter`
-- 确保有图形界面环境
+### 速度控制模式
+通过`/ardusub/cmd_vel`话题发送Twist消息：
+- `linear.x`: 前进/后退速度 (正值=前进)
+- `linear.y`: 左/右平移速度 (正值=右移)
+- `linear.z`: 上浮/下潜速度 (正值=上浮)
+- `angular.z`: 偏航角速度 (正值=逆时针)
 
-### 键盘控制无响应
-- 确保程序窗口获得焦点
-- 检查pynput是否正确安装
+### 飞行模式
+- `0`: 手动模式 (Manual)
+- `1`: 自稳模式 (Stabilize) 
+- `2`: 定深模式 (Depth Hold)
 
-### ROS连接问题
-- 检查ROS环境变量: `echo $ROS_MASTER_URI`
-- 确保roscore正在运行: `roscore`
+## 与原有UDP系统的关系
 
-### MAVLink连接失败
-- 检查ArduSub飞控连接
-- 确认串口权限和设备路径
+这个ROS包保持了对原有UDP控制系统的兼容性：
+- `control_ardusub.py` - 核心MAVLink通信模块保持不变
+- `udp_connect.py` - UDP代理可以与ROS节点并行运行
+- 新增的ROS接口提供了更标准化和模块化的控制方式
 
-## 🎯 推荐使用方式
+## 常见问题
 
-1. **新用户**: 直接使用GUI控制界面 (`python3 ardusub_gui_controller.py`)
-2. **ROS开发**: 使用ROS桥接模式进行集成开发
-3. **兼容性**: 需要兼容原有系统时使用UDP模式
+### 1. 连接问题
+- 确保ArduSub飞控在UDP端口14551上监听
+- 检查网络连接和防火墙设置
+- 确认MAVLink参数配置正确
 
-## 🤝 与原系统的兼容性
+### 2. 权限问题
+- 本包不需要sudo权限
+- 如果遇到串口权限问题，将用户添加到dialout组：
+  ```bash
+  sudo usermod -a -G dialout $USER
+  ```
 
-- ROS桥接节点同时支持ROS话题和UDP协议
-- 可以与原有UDP客户端无缝配合
-- 状态数据格式保持一致
+### 3. 依赖问题
+- 确保所有ROS依赖包已安装
+- 检查Python路径和包导入
 
-键盘控制脚本 ──┐
-              ├── UDP:9999 ──→ connect_main.py ──→ ArduSub飞控
-状态接收脚本 ──┘         ←── UDP:8888 ──┘
+## 开发和扩展
+
+### 添加新的控制功能
+1. 在`ardusub_ros_node.py`中添加新的订阅者
+2. 在相应的回调函数中调用MAVLink命令
+3. 在`ardusub_controller.py`中添加用户接口
+
+### 添加新的状态数据
+1. 在`mavlink_message_handler`中处理新的MAVLink消息
+2. 创建对应的ROS发布者
+3. 定义新的消息类型（如需要）
+
+## 许可证
+
+MIT License
+
+## 贡献
+
+欢迎提交Issue和Pull Request来改进这个项目。
